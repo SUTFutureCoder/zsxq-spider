@@ -56,8 +56,13 @@ def get_data(url):
         'Cookie': 'zsxq_access_token=' + ZSXQ_ACCESS_TOKEN,
         'User-Agent': USER_AGENT
     }
-    
+
     rsp = requests.get(url, headers=headers)
+    while not rsp.json().get('succeeded'):
+        rsp = requests.get(url, headers=headers)
+        print("retry")
+        time.sleep(SLEEP_SEC)
+
     with open('temp.json', 'w', encoding='utf-8') as f: # 将返回数据写入temp.json方便查看
         f.write(json.dumps(rsp.json(), indent=2, ensure_ascii=False))
     
@@ -255,6 +260,7 @@ def make_pdf(htmls):
         pdfkit.from_file(html_files, PDF_FILE_NAME, options=options)
     except Exception as e:
         pdf_error_flag = True
+        print(e)
         print("电子书生成失败！")
         pass
 
@@ -273,14 +279,14 @@ if __name__ == '__main__':
         os.mkdir(images_path)
 
     # 仅精华
-    #start_url = 'https://api.zsxq.com/v1.10/groups/481818518558/topics?scope=digests&count=30'
+    #start_url = 'https://api.zsxq.com/v2/groups/481818518558/topics?scope=digests&count=30'
     # 全部
-    #start_url = 'https://api.zsxq.com/v1.10/groups/481818518558/topics?count=30'
+    #start_url = 'https://api.zsxq.com/v2/groups/481818518558/topics?count=30'
     start_url = ''
     if ONLY_DIGESTS:
-        start_url = 'https://api.zsxq.com/v1.10/groups/' + GROUP_ID + '/topics?scope=digests&count=' + str(COUNTS_PER_TIME)
+        start_url = 'https://api.zsxq.com/v2/groups/' + GROUP_ID + '/topics?scope=digests&count=' + str(COUNTS_PER_TIME)
     else:
-        start_url = 'https://api.zsxq.com/v1.10/groups/' + GROUP_ID + '/topics?count=' + str(COUNTS_PER_TIME)
+        start_url = 'https://api.zsxq.com/v2/groups/' + GROUP_ID + '/topics?count=' + str(COUNTS_PER_TIME)
 
     url = start_url
     if FROM_DATE_TO_DATE and LATE_DATE.strip():
